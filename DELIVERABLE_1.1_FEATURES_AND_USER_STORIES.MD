@@ -1,8 +1,355 @@
 
 # Epic 1: API
-Core backend services and data access layer.
+Core backend services and data access layer.  
+
+---
+### User Story E1-F1: API Security & Authentication
+Provides secure, role-based access control across the API, enabling both guest and authenticated member experiences.
+
 ---
 
+### User Story E1-F1-US1: API Access Levels
+
+**As a** developer  
+**I want to** create user role definitions (guest, member)  
+**So that** different access levels can be enforced across the API
+
+**Acceptance Criteria:**
+- [ ] System supports at least two roles: `guest` and `member`
+- [ ] Access rules documented for each role (e.g., menu/location = guest, member profile = member-only)
+- [ ] Role information is encoded into JWT tokens for authenticated users
+- [ ] Guest users do not require tokens for allowed public endpoints
+- [ ] Middleware enforces role-based access restrictions for protected endpoints
+- [ ] Unauthorized access to protected endpoints returns 401 (unauthenticated) or 403 (forbidden)
+- [ ] API documentation lists all endpoints and their required access level
+
+**Notes / Implementation Details:**
+- Implement using FastAPI dependencies or middleware
+- Use Enum or constants for role names to avoid typos
+- Consider future extensibility (e.g., admin role)
+- Add automated tests validating role enforcement on key endpoints
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E1-F1-US2: API Tokens
+
+**As an** API client  
+**I want to** use token-based authentication  
+**So that** API access is protected
+
+**Acceptance Criteria:**
+- [ ] POST `/api/v1/auth/login` issues JWT access tokens for valid credentials
+- [ ] JWT token includes `member_id`, `email`, `role`, and `exp` (expiration timestamp)
+- [ ] Token expiration is configurable (default: 24 hours)
+- [ ] Token format: `{"access_token": "<jwt>", "token_type": "bearer"}`
+- [ ] Invalid credentials return 401 with a clear error message
+- [ ] Endpoint implements rate limiting (e.g., 5 attempts per minute per IP)
+- [ ] Token verification middleware validates signature, expiration, and required fields
+- [ ] Expired or invalid tokens return 401 with a standard error response
+
+**Notes / Implementation Details:**
+- Use PyJWT for generating and validating tokens
+- Store hashed passwords using bcrypt in BigQuery members table
+- No member data is modified during authentication
+- Consider optional refresh token implementation later
+- Failed login attempts should be logged for monitoring
+
+**Estimated Effort:** Large
+
+---
+
+### User Story E1-F1-US3: API Authenticated User Access
+
+**As a** user  
+**I want to** access information that my role grants me  
+**So that** I can navigate the website securely
+
+**Acceptance Criteria:**
+- [ ] Authenticated endpoints require valid JWT tokens
+- [ ] Authenticated users with role `member` can access their profile via `/api/v1/members/{member_id}`
+- [ ] Member user accessing a different user’s profile returns 403 (forbidden)
+- [ ] Sensitive member fields (e.g., `password_hash`) never appear in responses
+- [ ] Member role grants access to personalized data such as loyalty points
+- [ ] Token renewal supported through re-login
+- [ ] User session persists in frontend storage until token expiration or logout
+
+**Notes / Implementation Details:**
+- Implement FastAPI dependency (`get_current_user`) to return authenticated user context
+- Use consistent authentication headers: `Authorization: Bearer <token>`
+- Return Pydantic response models for type safety and autogen docs
+- Consider granular field-level permissions in future iterations
+
+**Estimated Effort:** Small
+
+---
+
+### User Story E1-F1-US4: API Guest User Access
+
+**As a** guest user  
+**I want to** access some information on the website without an account  
+**So that** I can browse quickly without logging in
+
+**Acceptance Criteria:**
+- [ ] Guest users can access public endpoints without authentication:
+  - `/api/v1/menu/categories`
+  - `/api/v1/menu/items`
+  - `/api/v1/locations`
+  - `/api/v1/locations/search`
+  - `/api/v1/locations/nearby`
+- [ ] Public endpoints enforce read-only access (no data creation, updates, or deletes)
+- [ ] Attempting to access protected endpoints returns 401
+- [ ] Public endpoints return the same structured JSON responses for both guest and authenticated users
+- [ ] Optional API rate limiting for guests to prevent abuse
+
+**Notes / Implementation Details:**
+- Implement open access routes via FastAPI router without auth dependency
+- Clearly separate protected and unprotected routes at routing level
+- Document public vs. protected endpoints in API specification
+- Consider adding a soft “guest token” in future for client analytics
+
+**Estimated Effort:** Small
+
+---
+
+## 
+---
+
+### User Story E1-F2: Location API
+Provides secure, read-only endpoints to retrieve store location information from BigQuery, with support for search and geolocation.
+
+---
+
+### User Story E1-F2-US1: Location GET All Endpoint Creation
+
+**As a** developer  
+**I want to** create a GET endpoint for all locations  
+**So that** the website can display store listings and info
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/locations` returns a list of all active store locations
+- [ ] Response includes `location_id`, `name`, `address_line1`, `address_line2`, `city`, `state`, `postal_code`, `country`, `phone`, `email`, `timezone`, `is_active`, and `hours_of_operation`
+- [ ] Locations are returned in a deterministic order (e.g., by `city` then `name` ascending)
+- [ ] Only active locations (`is_active = true`) are returned by default
+- [ ] Optional query parameter `include_inactive=true` includes inactive locations
+- [ ] Endpoint returns 200 status code with an array (which may be empty) on success
+- [ ] Endpoint returns 500 status code with a generic error message for unhandled server errors
+- [ ] API documentation is generated/updated with endpoint details and response schema
+
+**Notes / Implementation Details:**
+- Implement as part of FastAPI router under `/api/v1/locations`
+- Query BigQuery `uncle_joes_coffee.locations` table
+- Define Pydantic `Location` model reused across location endpoints
+- Consider normalizing `hours_of_operation` to a structured JSON format for frontend use
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E1-F2-US2: Location GET by ID Endpoint Creation
+
+**As an** API client  
+**I want to** receive information on one location by ID  
+**So that** I can display detailed store information to the user
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/locations/{location_id}` returns a single location when `location_id` exists
+- [ ] Endpoint returns 200 status code with valid location data for existing `location_id`
+- [ ] Endpoint returns 404 status code when `location_id` does not exist
+- [ ] Endpoint returns 400 status code for invalid `location_id` format (e.g., not UUID/int as expected)
+- [ ] Response includes all fields from the "GET All" response plus optional fields: `latitude`, `longitude`, `parking_info`, `store_services`, and `notes`
+- [ ] Inactive locations (`is_active = false`) are still returned if explicitly requested by `location_id`
+- [ ] API documentation describes the path parameter, response schema, and example responses
+
+**Notes / Implementation Details:**
+- Use FastAPI path parameter for `location_id`
+- Query BigQuery `uncle_joes_coffee.locations` by primary key
+- Use a `LocationDetail` Pydantic model that extends the base `Location` model with additional fields
+- Centralize 404 error handling for reuse across endpoints
+- Ensure no internal-only fields (e.g., internal store codes, cost centers) are exposed
+
+**Estimated Effort:** Small
+
+---
+
+### User Story E1-F2-US3: Location GET by Search Term Endpoint Creation
+
+**As an** API client  
+**I want to** provide search terms to the API and receive matching locations  
+**So that** I can display matching stores to the user
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/locations/search` accepts a required `q` query parameter for the search term
+- [ ] Search is case-insensitive and matches against `name`, `city`, `state`, and `postal_code`
+- [ ] Endpoint returns 200 status code with a JSON array of matching locations
+- [ ] Response includes `location_id`, `name`, `address_line1`, `city`, `state`, `postal_code`, `country`, and `is_active`
+- [ ] If no locations match the search query, endpoint returns 200 with an empty array
+- [ ] If `q` is missing or shorter than a minimum length (e.g., 2 characters), endpoint returns 400 with a validation error message
+- [ ] Only active locations are returned by default
+- [ ] Optional `include_inactive=true` includes inactive locations in the results
+- [ ] API documentation includes example search requests and responses
+
+**Notes / Implementation Details:**
+- Implement search logic using BigQuery (`LOWER(name) LIKE`, etc.)
+- Normalize incoming search term (trim, lowercase)
+- Consider additional optional filters (e.g., `state`, `country`) in a later iteration
+- Reuse `Location` model from E1-F2-US1
+- Ensure search queries are index-friendly to avoid full table scans where possible
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E1-F2-US4: Location GET by Geolocation Endpoint Creation
+
+**As an** API client  
+**I want to** provide the API with a user’s location  
+**So that** I can receive a list of store locations near the user and display them
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/locations/nearby` accepts required `lat` and `lng` query parameters (latitude and longitude in decimal degrees)
+- [ ] Optional `radius_m` query parameter allows clients to specify search radius (default: 5 m, max: 100 m)
+- [ ] Endpoint returns locations ordered by distance ascending (closest first)
+- [ ] Response includes `location_id`, `name`, `address_line1`, `city`, `state`, `postal_code`, `country`, `latitude`, `longitude`, `distance_m`, and `is_active`
+- [ ] Only active locations are returned
+- [ ] Endpoint returns 400 status code when `lat`, `lng`, or `radius_km` are invalid (e.g., out of range, non-numeric)
+- [ ] Endpoint returns 200 with an empty array when no locations are found within the specified radius
+- [ ] API documentation includes examples for nearby search, parameter descriptions, and distance units
+
+**Notes / Implementation Details:**
+- Use stored `latitude` and `longitude` values from BigQuery `uncle_joes_coffee.locations`
+- Implement distance calculation using the Haversine formula or equivalent in SQL
+- Optionally integrate Google Maps / Places APIs on the frontend for map display and user geolocation
+- Backend should treat `lat`/`lng` as trusted inputs from the client (no direct browser geolocation handling here)
+- Consider caching results for popular locations/areas to reduce BigQuery costs
+
+**Estimated Effort:** Large
+
+---
+
+## 
+---
+
+### User Story E1-F3: Menu API
+Provides secure, read-only endpoints to retrieve menu categories and items from BigQuery, with support for search and pagination.
+
+---
+### User Story E1-F3-US1: Menu GET Categories Endpoint Creation
+As a developer, I want to create GET endpoints for menu categories so that items can be organized and displayed properly.
+
+**As a** developer  
+**I want to** create GET endpoints for menu categories and their items  
+**So that** items can be organized and displayed properly on the menu
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/menu/categories` returns a list of all active menu categories
+- [ ] Response for `/api/v1/menu/categories` includes `category_id`, `name`, `description`, `sort_order`, and `is_active`
+- [ ] Categories are returned ordered by `sort_order` ascending, then `name` ascending
+- [ ] Optional query parameter `include_inactive=true` returns both active and inactive categories
+- [ ] GET `/api/v1/menu/categories/{category_id}/items` returns all active menu items for the specified category
+- [ ] Response for `/api/v1/menu/categories/{category_id}/items` includes `item_id`, `name`, `description`, `price`, `is_available`, `tags`, and `category_id`
+- [ ] Endpoint returns 404 status code when `category_id` does not exist
+- [ ] Both endpoints return 500 status code with a generic error message for unhandled server errors
+- [ ] API documentation is generated/updated with endpoint details, parameters, and response schemas
+
+**Notes / Implementation Details:**
+- Use FastAPI router with prefix `/api/v1/menu`
+- Query BigQuery `uncle_joes_coffee.menu_categories` and `uncle_joes_coffee.menu_items` tables
+- Filter items by `is_active = true` and/or `is_available = true` by default
+- Define Pydantic models for `MenuCategory` and `MenuItem` response objects
+- Consider adding a `display_group` or `menu_section` field later for multi-menu support (e.g., breakfast, lunch, seasonal)
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E1-F3-US2: Menu GET All Items Endpoint Creation
+As an API client, I want to receive menu items information, so that I can display it to the user.
+**As an** API client  
+**I want to** receive menu items information  
+**So that** I can display it to the user
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/menu/items` returns a list of all active menu items
+- [ ] Response includes `item_id`, `name`, `description`, `price`, `category_id`, `is_available`, and `tags` for each item
+- [ ] Items are returned in a deterministic order (e.g., by `category_id` then `name` ascending)
+- [ ] Only active and available items are returned by default
+- [ ] Optional query parameter `include_unavailable=true` includes unavailable items
+- [ ] Optional query parameter `category_id` filters items to a single category
+- [ ] Optional query parameter `max_price` filters items with `price <= max_price`
+- [ ] Endpoint returns 200 status code with an array (which may be empty) on success
+- [ ] Endpoint returns 500 status code with a generic error message for unhandled server errors
+- [ ] API documentation is generated/updated with endpoint details, query parameters, and response schema
+
+**Notes / Implementation Details:**
+- Implement as part of FastAPI router under `/api/v1/menu`
+- Query BigQuery `uncle_joes_coffee.menu_items` table with filters for `is_active` and `is_available`
+- Define a Pydantic `MenuItem` model reused by other menu endpoints
+- Ensure filtering logic is composable with pagination behavior defined in E1-F3-US4
+- Consider adding future support for additional filters (e.g., `dietary_tag`, `search_term`) without breaking the contract
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E1-F3-US3: Menu GET by ID Endpoint Creation
+As an API client, I want to receive information on one item by ID so that I can display menu item information to the user.
+
+**As an** API client  
+**I want to** search menu item information by a text term  
+**So that** I can display relevant menu items to the user
+
+**Acceptance Criteria:**
+- [ ] GET `/api/v1/menu/items/search` accepts a required `q` query parameter
+- [ ] Search is case-insensitive and matches against `name`, `description`, and `tags`
+- [ ] Endpoint returns 200 with a JSON array of matching menu items
+- [ ] Response includes `item_id`, `name`, `description`, `price`, `category_id`, `is_available`, and `tags`
+- [ ] If no items match, endpoint returns 200 with an empty array
+- [ ] If `q` is missing or shorter than 2 characters, endpoint returns 400 with a validation error
+- [ ] Only active and available items are returned by default
+- [ ] Optional `include_unavailable=true` includes unavailable items
+- [ ] API documentation includes sample search requests and responses
+
+**Notes / Implementation Details:**
+- Implement full-text search using BigQuery (`LOWER(name) LIKE`, etc.)
+- Sanitize and normalize incoming search terms
+- Consider additional filters (e.g., `category_id`, `max_price`, `dietary_tag`) for future iterations
+- Use index-friendly predicates where possible
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E1-F3-US4: Menu GET Pagination
+As a developer, I want to ensure that the API GET allows for pagination of results, so that calls don't take a long time to resolve.
+**As a** developer  
+**I want to** ensure that the Menu API GET endpoints allow for pagination  
+**So that** calls don’t take a long time to resolve and can scale to large menus
+
+**Acceptance Criteria:**
+- [ ] Pagination supported on:  
+  - `/api/v1/menu/categories`  
+  - `/api/v1/menu/categories/{category_id}/items`  
+  - `/api/v1/menu/items/search`
+- [ ] Endpoints accept `page` and `page_size` query parameters
+- [ ] Defaults: `page=1`, `page_size=20`
+- [ ] `page_size` cannot exceed 100
+- [ ] Paginated responses follow structure:  
+  ```json
+  {
+    "items": [...],
+    "page": 1,
+    "page_size": 20,
+    "total_items": 200,
+    "total_pages": 10
+  }
+
+
+---
+
+## 
+---
 ## Feature E1-F4: Members API
 Provides secure, read-only endpoints to retrieve member information, authentication data, and loyalty points from BigQuery.
 
