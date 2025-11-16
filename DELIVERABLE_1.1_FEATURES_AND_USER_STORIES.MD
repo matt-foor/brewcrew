@@ -292,7 +292,6 @@ Provides secure, read-only endpoints to retrieve menu categories and items from 
 
 ---
 ### User Story E1-F3-US1: Menu GET Categories Endpoint Creation
-As a developer, I want to create GET endpoints for menu categories so that items can be organized and displayed properly.
 
 **As a** developer  
 **I want to** create GET endpoints for menu categories and their items  
@@ -321,7 +320,7 @@ As a developer, I want to create GET endpoints for menu categories so that items
 ---
 
 ### User Story E1-F3-US2: Menu GET All Items Endpoint Creation
-As an API client, I want to receive menu items information, so that I can display it to the user.
+
 **As an** API client  
 **I want to** receive menu items information  
 **So that** I can display it to the user
@@ -350,7 +349,6 @@ As an API client, I want to receive menu items information, so that I can displa
 ---
 
 ### User Story E1-F3-US3: Menu GET by ID Endpoint Creation
-As an API client, I want to receive information on one item by ID so that I can display menu item information to the user.
 
 **As an** API client  
 **I want to** search menu item information by a text term  
@@ -378,7 +376,7 @@ As an API client, I want to receive information on one item by ID so that I can 
 ---
 
 ### User Story E1-F3-US4: Menu GET Pagination
-As a developer, I want to ensure that the API GET allows for pagination of results, so that calls don't take a long time to resolve.
+
 **As a** developer  
 **I want to** ensure that the Menu API GET endpoints allow for pagination  
 **So that** calls don’t take a long time to resolve and can scale to large menus
