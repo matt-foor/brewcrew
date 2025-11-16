@@ -1,3 +1,59 @@
+## Uncle Joe's Coffe Company - Brew Crew
+
+**Team Members:**
+- Audrey - Scrum Master, Developer
+- Surya - Main Tester, Developer
+- Matt - Product Owner, Developer
+- Ana - Main Developer
+
+---
+
+## Team Roles and Responsibilities
+
+**Scrum Master - Audrey:**
+- Facilitate daily standups and sprint meetings
+- Maintain GitLab board and issue tracking
+- Remove blockers for the team
+- Ensure progress toward deliverables
+- Coordinate deliverable submissions
+- Assist in development, testing, and integration
+
+**Product Owner - Matt:**
+- Prioritize features and user stories
+- Clarify requirements
+- Accept completed work
+- Make prioritiazation decisions when scope needs adjustment
+- Communicate with instructor about concerns or blockers
+- Assist in development, testing, and integration
+
+**Main Developer - Ana:**
+- Lead development efforts and architecture decisions
+- Has main say on development-related decisions
+- Implement features according to user stories
+- Conduct code reviews on merge requests
+- Support teammates when stuck
+- Lead development, testing, and integration efforts
+
+**Main Tester - Surya:**
+- Lead testing strategy and quality assurance
+- Has main say on testing-related decisions
+- Write and execute comprehensive test plans
+- Ensure code coverage and quality standards
+- Implement unit, integration, and load testing
+- Lead testing efforts and assist in development and integration
+
+**All Team Members:**
+- Contribute to development, testing, and integration
+- Participate in code reviews
+- Communicate progress and blockers
+- Support each other to ensure project success
+
+--- 
+
+## Table of Contents
+- [Epic 1: API](#epic-1-api)
+- [Epic 2: Website](#epic-2-website)
+- [Epic 3: Chatbot](#epic-3-chatbot)
 
 # Epic 1: API
 Core backend services and data access layer.  
