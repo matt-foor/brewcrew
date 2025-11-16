@@ -1402,8 +1402,175 @@ Member login, account dashboard, order history, and loyalty program features.
 
 **Estimated Effort:** Medium
 ---
-###
+## 
 ---
+
+## Feature E2-F4: Responsive Design & Deployment
+Ensures website provides optimal experience across all devices and deploys reliably.
+
+---
+
+### User Story E2-F4-US1: Mobile-Responsive Website
+
+**As a** mobile user  
+**I want to** the website to scale properly  
+**So that** I can browse it on my phone
+
+**Acceptance Criteria:**
+- [ ] Website renders correctly on mobile devices (320px - 768px width)
+- [ ] All content is readable without horizontal scrolling
+- [ ] Images scale proportionally without distortion
+- [ ] Text remains legible at mobile font sizes (minimum 16px for body text)
+- [ ] Forms and input fields are appropriately sized for mobile interaction
+- [ ] Layout adapts using CSS media queries for different breakpoints
+- [ ] Website tested on iOS Safari, Android Chrome, and major mobile browsers
+
+**Notes / Implementation Details:**
+- Use mobile-first CSS approach (start with mobile styles, add desktop enhancements)
+- Implement responsive breakpoints: mobile (< 768px), tablet (768px - 1024px), desktop (> 1024px)
+- Use viewport meta tag: `<meta name="viewport" content="width=device-width, initial-scale=1">`
+- Test using browser dev tools and real devices
+- Use flexible units (%, em, rem, vw, vh) instead of fixed pixels where appropriate
+- Implement CSS Grid and Flexbox for responsive layouts
+- Consider using CSS framework (Bootstrap, Tailwind) for consistent responsive behavior
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E2-F4-US2: Touch-Friendly Navigation
+
+**As a** customer  
+**I want to** have touch-friendly navigation  
+**So that** it's easy to use on tablets/phones
+
+**Acceptance Criteria:**
+- [ ] All interactive elements (buttons, links, inputs) are minimum 44x44px touch targets
+- [ ] Touch targets have adequate spacing (8px minimum) to prevent accidental clicks
+- [ ] Hover states are replaced with appropriate touch states on mobile
+- [ ] Swipe gestures work for carousels or image galleries (if implemented)
+- [ ] Navigation menu transforms to hamburger menu on mobile devices
+- [ ] Tap interactions provide immediate visual feedback
+- [ ] No reliance on hover-only interactions for critical functionality
+
+**Notes / Implementation Details:**
+- Follow Apple Human Interface Guidelines and Material Design touch target recommendations
+- Use `@media (hover: none) and (pointer: coarse)` to detect touch devices
+- Implement touch event listeners for swipe gestures using JavaScript or libraries
+- Test tap delay and ensure fast tap response (avoid 300ms delay)
+- Use CSS `:active` pseudo-class for touch feedback
+- Implement hamburger menu with smooth slide-in animation
+- Ensure dropdown menus work with tap (not just hover)
+- Test on actual touch devices, not just browser emulation
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E2-F4-US3: Optimized Images for Fast Loading
+
+**As a** customer  
+**I want to** have optimized images  
+**So that** pages load quickly
+
+**Acceptance Criteria:**
+- [ ] Images are compressed without visible quality loss
+- [ ] Responsive images serve appropriate sizes for different devices (using `srcset` or `picture` element)
+- [ ] Images use modern formats (WebP with JPG/PNG fallbacks)
+- [ ] Lazy loading implemented for below-the-fold images
+- [ ] Page loads in under 3 seconds on 3G connection
+- [ ] Largest Contentful Paint (LCP) under 2.5 seconds
+- [ ] Images have appropriate alt text for accessibility
+
+**Notes / Implementation Details:**
+- Use image optimization tools (ImageOptim, TinyPNG, Squoosh)
+- Implement `<picture>` element with multiple sources for different screen sizes
+- Use `loading="lazy"` attribute on images below the fold
+- Serve images via CDN for faster delivery
+- Use appropriate image formats: WebP for photos, SVG for icons/logos
+- Implement progressive JPEG loading for large images
+- Set explicit width/height attributes to prevent layout shift
+- Consider using next-gen formats with proper fallbacks:
+```html
+  <picture>
+    <source srcset="image.webp" type="image/webp">
+    <img src="image.jpg" alt="Description">
+  </picture>
+```
+- Monitor performance using Lighthouse and PageSpeed Insights
+
+**Estimated Effort:** Medium
+
+---
+
+### User Story E2-F4-US4: Automated Website Deployments
+
+**As a** PM  
+**I want to** have automated deployments  
+**So that** the website updates frequently
+
+**Acceptance Criteria:**
+- [ ] GitLab CI/CD pipeline configured for website repository
+- [ ] Pipeline automatically builds and deploys on commits to main branch
+- [ ] Successful builds deploy to production environment (Google Cloud Run)
+- [ ] Failed builds prevent deployment and notify team
+- [ ] Deployment includes automated smoke tests to verify site is accessible
+- [ ] Rollback capability available for failed deployments
+- [ ] Pipeline status visible in GitLab merge requests
+
+**Notes / Implementation Details:**
+- Create `.gitlab-ci.yml` with stages: build, test, deploy
+- Build stage: compile assets, run build scripts (e.g., `npm run build`)
+- Test stage: run linting, unit tests, accessibility checks
+- Deploy stage: upload build artifacts to Google Cloud Run or Cloud Storage
+- Use GitLab environment variables for GCP credentials and deployment URLs
+- Implement manual approval gate for production deployments (optional)
+- Configure Cloud Run to serve static site or use Cloud Storage + Load Balancer
+- Set up deployment notifications via email or Slack
+- Example CI/CD stages:
+  - `build`: `npm install && npm run build`
+  - `test`: `npm run lint && npm run test`
+  - `deploy`: Upload `dist/` folder to GCP
+- Document deployment process and rollback procedures
+
+**Estimated Effort:** Large
+
+---
+
+### User Story E2-F4-US5: Browser Compatibility Testing
+
+**As a** developer  
+**I want to** have browser compatibility testing  
+**So that** all users have a consistent experience
+
+**Acceptance Criteria:**
+- [ ] Website tested on Chrome, Firefox, Safari, and Edge (latest versions)
+- [ ] Website tested on mobile browsers: iOS Safari, Android Chrome
+- [ ] Critical functionality works on browsers from last 2 major versions
+- [ ] Visual rendering is consistent across browsers (with acceptable minor differences)
+- [ ] Polyfills implemented for unsupported JavaScript features
+- [ ] CSS vendor prefixes included where necessary
+- [ ] Browser compatibility issues documented and addressed
+
+**Notes / Implementation Details:**
+- Use BrowserStack or similar service for cross-browser testing
+- Implement automated browser testing using tools like Selenium or Playwright
+- Use Autoprefixer to automatically add CSS vendor prefixes
+- Check browser support using caniuse.com for new features
+- Implement feature detection (not browser detection) using Modernizr
+- Define browser support policy (e.g., last 2 versions, >1% market share)
+- Test on actual devices when possible, not just emulators
+- Use CSS reset or normalize.css for consistent baseline styles
+- Identify and document known browser-specific issues in README
+- Common compatibility checks:
+  - CSS Grid/Flexbox support
+  - ES6+ JavaScript features
+  - Fetch API and Promises
+  - CSS custom properties (variables)
+  - Modern image formats (WebP)
+- Consider using transpilers (Babel) for JavaScript compatibility
+
+**Estimated Effort:** Medium
 
 # Epic 3: Chatbot
 AI-powered chatbot for customer self-service.
